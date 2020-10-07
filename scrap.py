@@ -5,7 +5,7 @@ import mysql.connector
 
 sql_user = {
             'user':'Gabriel', 
-            'password':'Tg@briel10',
+            'password':'xxxx',
             'host':'127.0.0.1',
             'port':'3306',
             'database':'web'}
