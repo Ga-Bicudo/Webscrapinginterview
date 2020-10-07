@@ -1,8 +1,7 @@
+from re import split
 from bs4 import BeautifulSoup
 import requests
 import mysql.connector 
-from selenium.webdriver.chrome.options import Options
-from selenium import webdriver 
 
 sql_user = {
             'user':'Gabriel', 
@@ -15,32 +14,39 @@ cnx =  mysql.connector.connect(**sql_user)
 
 cursor = cnx.cursor()
 
-options = webdriver.chrome.options()
-driver = webdriver.Chrome()  # Optional argument, if not specified will search path.
-driver.get('https://baixarmusica.me')
+def scrap():
 
-last_pag = driver.find_elements_by_xpath('/html/body/div[1]/div[2]/div[1]/div/div/a[4]').click()
+    for articles in stxt.find_all('article'):
 
-print(last_pag)
+        titles = articles.h2.a.text
 
+        url = articles.h2.a['href']
+
+        summary = articles.p.text
+
+        download = articles.find('footer',class_='entry-footer cf').a['href']
+
+        cursor.execute("insert into webscraping(url,url_down,tittle,summary) values ('{0}','{1}','{2}','{3}');".format(url,download,titles,summary))
+
+        print(titles,'\n',url,'\n',summary,'\n',download,'\n\n',page_i)
+
+        cnx.commit()
+
+page_i = 1
+
+site = requests.get("https://baixarmusica.me/page/{}/".format(page_i)).text
 
 stxt = BeautifulSoup(site,'lxml')
 
-for articles in stxt.find_all('article'):
+last_page = stxt.find("a", class_='last')['href']
 
-    titles = articles.h2.a.text
+final_page = int(last_page.split('/',5)[4])
 
-    url = articles.h2.a['href']
-
-    summary = articles.p.text
-
-    download = articles.find('footer',class_='entry-footer cf').a['href']
-
-    cursor.execute("insert into webscraping(url,url_down,tittle,summary) values ('{0}','{1}','{2}','{3}');".format(url,download,titles,summary))
-
-    print(titles,'\n',url,'\n',summary,'\n',download,'\n\n')
-
-    cnx.commit()
+while page_i <= final_page:
+    site = requests.get("https://baixarmusica.me/page/{}/".format(page_i)).text
+    stxt = BeautifulSoup(site,'lxml')
+    scrap()
+    page_i = page_i + 1
 
 cursor.close()
 cnx.close()
